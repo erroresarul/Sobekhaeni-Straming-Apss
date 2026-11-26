@@ -1,0 +1,3 @@
+After copying this update into your existing repository, you may delete the old unused file:
+app/src/main/java/com/sobekhanei/stream/StreamGuardWebView.kt
+The updated MainActivity no longer calls StreamWebView. Native playback is implemented in NativeMediaPlayer.kt.
