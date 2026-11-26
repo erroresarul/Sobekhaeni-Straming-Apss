@@ -1,3 +1,5 @@
-After copying this update into your existing repository, you may delete the old unused file:
-app/src/main/java/com/sobekhanei/stream/StreamGuardWebView.kt
-The updated MainActivity no longer calls StreamWebView. Native playback is implemented in NativeMediaPlayer.kt.
+DO NOT DELETE app/src/main/java/com/sobekhanei/stream/StreamGuardWebView.kt.
+It is now the active VidAPI embed player and StreamGuard protection layer.
+
+Delete the obsolete native player source instead:
+app/src/main/java/com/sobekhanei/stream/NativeMediaPlayer.kt
