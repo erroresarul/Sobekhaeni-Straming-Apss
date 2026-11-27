@@ -300,7 +300,7 @@ private const val POPUP_GUARD_SCRIPT = """
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun StreamWebView(url: String, modifier: Modifier = Modifier) {
+fun StreamWebView(url: String, modifier: Modifier = Modifier, guardEnabled: Boolean = true) {
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -314,7 +314,7 @@ fun StreamWebView(url: String, modifier: Modifier = Modifier) {
                 settings.domStorageEnabled = true
                 settings.databaseEnabled = true
                 settings.javaScriptCanOpenWindowsAutomatically = false
-                settings.setSupportMultipleWindows(true)
+                settings.setSupportMultipleWindows(guardEnabled)
                 settings.allowFileAccess = false
                 settings.allowContentAccess = false
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
@@ -335,7 +335,7 @@ fun StreamWebView(url: String, modifier: Modifier = Modifier) {
                         request: WebResourceRequest?
                     ): WebResourceResponse? {
                         val requestUrl = request?.url?.toString() ?: return null
-                        if (!guard.isBlocked(requestUrl)) return null
+                        if (!guardEnabled || !guard.isBlocked(requestUrl)) return null
 
                         return WebResourceResponse(
                             "text/plain",
@@ -355,11 +355,11 @@ fun StreamWebView(url: String, modifier: Modifier = Modifier) {
                         val scheme = uri.scheme?.lowercase(Locale.US)
 
                         if (scheme != "https" && scheme != "http") return true
-                        if (guard.isBlocked(uri.toString())) return true
+                        if (guardEnabled && guard.isBlocked(uri.toString())) return true
 
                         // Keep top-level navigation in the selected embed provider.
                         // Nested player/CDN frames are allowed unless they match a block rule.
-                        if (request.isForMainFrame) {
+                        if (guardEnabled && request.isForMainFrame) {
                             return !guard.isAllowedMainFrame(uri.host)
                         }
                         return false
@@ -371,14 +371,14 @@ fun StreamWebView(url: String, modifier: Modifier = Modifier) {
                         favicon: android.graphics.Bitmap?
                     ) {
                         val host = runCatching { Uri.parse(pageUrl.orEmpty()).host }.getOrNull()
-                        if (!guard.isAllowedMainFrame(host)) {
+                        if (guardEnabled && !guard.isAllowedMainFrame(host)) {
                             view?.stopLoading()
                         }
                     }
 
                     override fun onPageFinished(view: WebView?, pageUrl: String?) {
                         val host = runCatching { Uri.parse(pageUrl.orEmpty()).host }.getOrNull()
-                        if (guard.isAllowedMainFrame(host)) {
+                        if (guardEnabled && guard.isAllowedMainFrame(host)) {
                             view?.evaluateJavascript(POPUP_GUARD_SCRIPT, null)
                         }
                     }

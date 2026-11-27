@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -264,6 +266,7 @@ private fun MediaCard(item: MediaItem, onClick: () -> Unit) {
 
 @Composable
 private fun PlayerScreen(item: MediaItem, onBack: () -> Unit) {
+    var guardEnabled by remember(item.mediaType, item.id) { mutableStateOf(true) }
     var season by remember(item.id) { mutableStateOf("1") }
     var episode by remember(item.id) { mutableStateOf("1") }
     var tvPlayerUrl by remember(item.id) {
@@ -301,15 +304,15 @@ private fun PlayerScreen(item: MediaItem, onBack: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    "VidAPI original player · StreamGuard active",
+                    if (guardEnabled) "StreamGuard on" else "StreamGuard off",
                     color = Color(0xFF34D399),
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-            Icon(
-                Icons.Default.Shield,
-                contentDescription = "StreamGuard protection",
-                tint = Color(0xFF34D399)
+            Switch(
+                checked = guardEnabled,
+                onCheckedChange = { guardEnabled = it },
+                modifier = Modifier.semantics { contentDescription = "StreamGuard" }
             )
         }
 
@@ -351,10 +354,13 @@ private fun PlayerScreen(item: MediaItem, onBack: () -> Unit) {
             }
         }
 
-        StreamWebView(
-            url = playerUrl,
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        )
+        key(guardEnabled) {
+            StreamWebView(
+                url = playerUrl,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                guardEnabled = guardEnabled
+            )
+        }
 
         Surface(
             color = Night,
@@ -373,7 +379,8 @@ private fun PlayerScreen(item: MediaItem, onBack: () -> Unit) {
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    "StreamGuard filters known ad domains and blocks pop-up windows",
+                    if (guardEnabled) "Video stuck? Switch StreamGuard off to retry."
+                    else "StreamGuard is off for this title. Ads may appear.",
                     color = Muted,
                     style = MaterialTheme.typography.labelSmall
                 )
